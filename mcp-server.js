@@ -14,7 +14,6 @@ import {
   listEventsSchema,
   updateEventSchema,
 } from "./schemas/event-schemas.js";
-import { z } from "zod";
 
 const server = new McpServer({
   name: "mcp-server",

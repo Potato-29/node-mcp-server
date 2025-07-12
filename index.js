@@ -4,6 +4,7 @@ import process from "process";
 import { authenticate } from "@google-cloud/local-auth";
 import { google } from "googleapis";
 import { fileURLToPath } from "url";
+import { getMongoDb } from "./config/mongo.js";
 
 // Get the directory where this script is located (not where it's executed from)
 const __filename = fileURLToPath(import.meta.url);
@@ -23,10 +24,10 @@ const SCOPES = ["https://www.googleapis.com/auth/calendar"];
 const TOKEN_PATH = path.join(__dirname, "token.json");
 const CREDENTIALS_PATH = path.join(__dirname, "credentials_desktop.json");
 
-console.log("Script directory (__dirname):", __dirname);
-console.log("Current working directory:", process.cwd());
-console.log("Looking for credentials at:", CREDENTIALS_PATH);
-console.log("Token will be saved at:", TOKEN_PATH);
+const credentials = JSON.parse(await fs.readFile(CREDENTIALS_PATH, "utf8"));
+const client_id = credentials.installed.client_id;
+
+const mongoDb = await getMongoDb();
 /**
  * Reads previously authorized credentials from the save file.
  *
@@ -34,9 +35,8 @@ console.log("Token will be saved at:", TOKEN_PATH);
  */
 async function loadSavedCredentialsIfExist() {
   try {
-    const content = await fs.readFile(TOKEN_PATH);
-    const credentials = JSON.parse(content);
-    return google.auth.fromJSON(credentials);
+    const token = await mongoDb.collection("tokens").findOne({ client_id });
+    return google.auth.fromJSON(token);
   } catch (err) {
     return null;
   }
@@ -52,14 +52,16 @@ async function saveCredentials(client) {
   const content = await fs.readFile(CREDENTIALS_PATH);
   const keys = JSON.parse(content);
   const key = keys.installed || keys.web;
-  const payload = JSON.stringify({
+  const payload = {
     type: "authorized_user",
     client_id: key.client_id,
     client_secret: key.client_secret,
     refresh_token: client.credentials.refresh_token,
+  };
+
+  const token = await mongoDb.collection("tokens").insertOne({
+    ...payload,
   });
-  console.log(payload, "<<<<<<<<<<<<<payload");
-  await fs.writeFile(TOKEN_PATH, payload);
 }
 
 /**

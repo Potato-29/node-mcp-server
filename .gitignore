@@ -67,3 +67,5 @@ temp/
 
 credentials_desktop.json
 token.json
+
+.cursor/
