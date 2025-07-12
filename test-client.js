@@ -16,6 +16,7 @@ await client.connect(transport);
 const result = await client.listTools();
 console.log("result", result);
 
+// CREATE EVENT TOOL CALL
 const calresult = await client.callTool({
   name: "createEvent",
   arguments: {
@@ -27,5 +28,13 @@ const calresult = await client.callTool({
     isFullday: true,
   },
 });
-
 console.log("event", calresult);
+
+// DELETE EVENT TOOL CALL
+// const deleteRes = await client.callTool({
+//   name: "deleteEvent",
+//   arguments: {
+//     eventId: "71ru9chqa67vu63f495u2g1t1o",
+//   },
+// });
+// console.log("event", deleteRes);
